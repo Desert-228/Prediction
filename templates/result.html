@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result</title>
+</head>
+<body>
+    <h1>Result</h1>
+
+    <p>The predicted soil class is: {{ soil_class }}</p>
+
+    <h2>Crop Predictions</h2>
+    <ul>
+        <li>Rice: {{ crop_predictions[0] }}</li>
+        <li>Wheat: {{ crop_predictions[1] }}</li>
+        <li>Maize: {{ crop_predictions[2] }}</li>
+        <li>Rooty vegetables: {{ crop_predictions[3] }}</li>
+        <li>Cucumber: {{ crop_predictions[4] }}</li>
+        <!-- Add more crops as needed -->
+    </ul>
+
+    <!-- You can customize the display based on your crop classes -->
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Classification</title>
+</head>
+<body>
+    <h1>Soil Classification</h1>
+
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <label for="image">Upload Image (PNG or JPG):</label>
+        <input type="file" name="image" accept=".png, .jpg, .jpeg" required>
+        <br>
+
+        <label for="temp">Temperature:</label>
+        <input type="number" name="temp" required>
+        <br>
+
+        <label for="rain">Rainfall:</label>
+        <input type="number" name="rain" required>
+        <br>
+
+        <input type="submit" value="Predict">
+    </form>
+</body>
+</html>
