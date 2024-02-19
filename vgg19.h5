@@ -1,0 +1,158 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.model_selection import train_test_split
+from PIL import Image
+import numpy as np
+import os
+
+# Define your custom dataset directory
+dataset_dir = 'C:\\Users\\malya\\OneDrive\\Desktop\\Soil\\Soil types'
+
+# Load and preprocess the data
+def load_dataset(directory):
+    data = []
+    labels = []
+    class_labels = os.listdir(directory)
+    for label, class_name in enumerate(class_labels):
+        class_path = os.path.join(directory, class_name)
+        if os.path.isdir(class_path):  # Check if it's a directory
+            for img_name in os.listdir(class_path):
+                img_path = os.path.join(class_path, img_name)
+                img = Image.open(img_path).resize((224, 224))
+                img_array = np.array(img) / 255.0
+                data.append(img_array)
+                labels.append(label)
+    return np.array(data), np.array(labels)
+
+# Load the entire dataset
+data, labels = load_dataset(dataset_dir)
+
+# Print the number of samples
+print(f"Number of samples: {len(data)}")
+
+# Split the data into training and testing sets
+train_data, test_data, train_labels, test_labels = train_test_split(data, labels, test_size=0.2, random_state=42)
+
+# Data Augmentation
+datagen = ImageDataGenerator(
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest'
+)
+
+# Define the VGG16 model with fine-tuning
+vgg19_model = tf.keras.applications.VGG19(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+vgg19_model.trainable = True
+
+# Fine-tune some layers
+fine_tune_at = 15
+for layer in vgg19_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+model = models.Sequential([
+    vgg19_model,
+    layers.Flatten(),
+    layers.Dense(256, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(len(set(labels)), activation='softmax')
+])
+
+# Compile the model
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model with data augmentation
+history = model.fit(datagen.flow(train_data, train_labels, batch_size=32),
+                    epochs=20,
+                    validation_data=(test_data, test_labels))
+
+
+model.save("C:\\Users\\malya\\OneDrive\\Desktop\\Soil\\vgg19.h5")
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.model_selection import train_test_split
+from PIL import Image
+import numpy as np
+import os
+
+loaded_model = tf.keras.models.load_model('C:\\Users\\malya\\OneDrive\\Desktop\\Soil\\vgg19.h5')
+
+
+test_loss, test_accuracy = model.evaluate(test_data, test_labels)
+print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
+
+
+import pandas as pd
+crop_data=pd.read_csv("C:\\Users\\malya\\OneDrive\\Desktop\\Soil\\crop_Agri.csv")
+X=crop_data.drop('Crop',axis=1)
+y=crop_data['Crop']
+X = crop_data[['Temperature', 'SoilType', 'Temperature_and_Rainfall']]
+y = crop_data['Crop']
+print(X)
+X_encoded = pd.get_dummies(X)
+# # Ensure that column names match the ones used during training
+# missing_columns = set(X_train.columns) - set(new_data_encoded.columns)
+# for column in missing_columns:
+#     new_data_encoded[column] = 0
+print(X_encoded)
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+new_data=pd.DataFrame({
+    'Temperature': [temp],'SoilType':[soil_class_label],'Temperature_and_Rainfall':[rain]
+})
+# Assuming 'new_data' is a DataFrame with columns 'Temperature', 'Rainfall', and 'Soil_Type'
+print(new_data)
+
+
+
+# Convert soil_class_label to a one-hot encoded format
+soil_class_label_one_hot = pd.get_dummies([soil_class_label], prefix='SoilType')
+# soil_class_label_one_hot = soil_class_label_one_hot.reindex(columns=model.get_booster().feature_names, fill_value=0)
+input_data = pd.DataFrame({
+    'Temperature': [temp],
+    'SoilType_Cinder': [1 if soil_class_label == 'Cinder Soil' else 0],
+    'SoilType_Laterite': [1 if soil_class_label == 'Laterite Soil' else 0],
+    'SoilType_Peat': [1 if soil_class_label == 'Peat Soil' else 0],
+    'SoilType_Black': [1 if soil_class_label == 'Black Soil' else 0],
+    'SoilType_Yellow': [1 if soil_class_label == 'Yellow Soil' else 0],
+    'Temperature_and_Rainfall': [rain]
+})
+
+# # Make predictions
+
+# # Create a DataFrame with the input features
+# input_data = pd.DataFrame({
+#     'Temperature': [temp],
+#     'SoilType_Laterite': soil_class_label_one_hot['SoilType_Laterite'],
+#     'Rainfall': [rain]
+# })
+
+# # Make predictions
+# predictions = model.predict(input_data)
+# print(predictions)
+
+
+feature_names = model.feature_names_in_
+
+# Reorder columns to match the order during training
+input_data = input_data[feature_names]
+
+# Make predictions
+predictions = model.predict(input_data)
+print(predictions)
